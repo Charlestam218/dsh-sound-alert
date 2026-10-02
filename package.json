@@ -1,0 +1,59 @@
+{
+  "name": "dsh-sound-alert",
+  "version": "1.2.0",
+  "description": "DSH 声音提示插件：任务完成与需要确认时播放两种不同的清脆音效（一高一低，浏览器端合成，无音频文件）",
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "sound",
+    "notification",
+    "alert",
+    "chime"
+  ],
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib",
+    "preview",
+    "tools",
+    "cordis.patch.yml",
+    "install.ps1",
+    "uninstall.ps1",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-session"
+      ],
+      "immediately": true
+    }
+  },
+  "scripts": {
+    "test": "node test/harness.mjs",
+    "preview": "node tools/render-preview.mjs",
+    "check": "node --check lib/index.js && node --check lib/client.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Charlestam218/dsh-sound-alert.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Charlestam218/dsh-sound-alert/issues"
+  },
+  "homepage": "https://github.com/Charlestam218/dsh-sound-alert#readme",
+  "author": "Charlestam218",
+  "license": "MIT"
+}

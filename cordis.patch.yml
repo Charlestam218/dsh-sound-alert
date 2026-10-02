@@ -1,0 +1,15 @@
+# ============================================================================
+# dsh-sound-alert —— DSH bundle patch
+# ============================================================================
+# 这个文件把本插件插入 profile 的配置树（DSH 启动时按 bundle 层叠加各插件的
+# patch）。它是「挂载声明」，不是用户配置。
+#
+# 安装（profile 目录内）：
+#   - 本包目录已位于 <profile>/node_modules/dsh-sound-alert
+#   - profile 的 package.json 里 dsh.profile.bundles 含 "dsh-sound-alert"
+# 详见 README.md 与 install.ps1。
+# ============================================================================
+
+- insert:
+    - id: dsh-sound-alert
+      name: dsh-sound-alert
