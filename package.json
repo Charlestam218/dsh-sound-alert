@@ -1,7 +1,7 @@
 {
   "name": "dsh-sound-alert",
-  "version": "1.2.0",
-  "description": "DSH 声音提示插件：任务完成与需要确认时播放两种不同的清脆音效（一高一低，浏览器端合成，无音频文件）",
+  "version": "1.4.1",
+  "description": "DSH 声音提示插件：任务完成与需要确认时播放两种不同的清脆音效（一高一低，浏览器端合成，无音频文件），并在任务栏图标上显示待处理会话数",
   "keywords": [
     "dsh",
     "dsh-plugin",
@@ -44,6 +44,7 @@
   "scripts": {
     "test": "node test/harness.mjs",
     "preview": "node tools/render-preview.mjs",
+    "badge-demo": "node tools/badge-demo.mjs",
     "check": "node --check lib/index.js && node --check lib/client.js"
   },
   "repository": {

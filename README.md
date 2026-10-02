@@ -122,6 +122,56 @@ confirm: [ { freq: 220.00,  at: 0.00, ratio: 3.0,  index: 1.6, indexDecay: 0.06,
 
 插件还会在第一次点击/按键手势里提前创建并唤醒音频上下文，尽量避免提示音被静默吞掉。
 
+## 任务栏徽标（Windows）
+
+除了声音，插件还会在 **DSH 任务栏按钮上显示红点数字**：数量 = **需要确认** + **已完成未读**的会话数。
+
+| 口径 | 含义 |
+|---|---|
+| 需要确认 | 该会话有 `pendingInteraction`（授权 / 提问 / 计划审阅），也就是「在等你拍板」 |
+| 已完成未读 | 该会话 `completionUnread`（DSH 自己维护的「这一轮跑完了但还没看」） |
+
+同一个会话只计一次（有待确认时按待确认算）。点进那个会话看一看、或回答掉提问，
+DSH 会清掉对应状态 → 数量归零 → **红点自动消失**。
+
+### 它是怎么实现的
+
+DSH 宿主是 Electron 以 `ELECTRON_RUN_AS_NODE` 启动的子进程，拿不到 Electron 的窗口 API；
+桌面壳的 IPC 也只为 `ready` / `fatal` / `update-tasks` 等六种消息保留通道，没有徽标接口。
+所以插件走的是 Win32 公开接口：
+
+```
+浏览器半区（算数量） --GET /dsh-sound-alert/attention?n=&p=&c=--> 宿主半区（写状态文件 + 心跳）
+                                                                      ↓ 拉起
+                                        tools/badge-helper.exe（C# 助手，poll 状态文件）
+                                                                      ↓
+                                        ITaskbarList3::SetOverlayIcon(DSH 窗口, 红点图标)
+```
+
+- 助手用系统自带的 .NET Framework 编译器（`csc.exe`）**一次性编译**到 `$DSH_HOME/dsh-sound-alert/`，
+  源码在 `tools/badge-helper.cs`（约 300 行，只做三件事：找窗口、画图标、调 SetOverlayIcon）；
+- 助手在**独立进程**里跑：不让任何原生调用风险波及 DSH，且宿主一停它就靠心跳过期自己清掉徽标退出；
+- 徽标只在有数量时存在：归零约 1.5 秒后助手清除徽标并退出；
+- 数量或实现失败（非 Windows、缺编译器、找不到窗口、权限不足）会走静默降级：
+  宿主回报 `mode: "unsupported"`，浏览器半区改调 `navigator.setAppBadge()`，**不影响声音功能**。
+
+### 自检 / 演示
+
+不用等真实事件，直接看徽标通道通不通：
+
+```powershell
+node tools\badge-demo.mjs        # DSH 图标上显示红色 3，20 秒后自动清除
+node tools\badge-demo.mjs 5 60   # 显示 5 并保持 60 秒
+node tools\badge-demo.mjs 0      # 立即清除
+```
+
+助手日志（能看到找窗口与设置徽标的每一步）：`$DSH_HOME\dsh-sound-alert\badge-helper.log`。
+浏览器半区可以用 `dshSoundAlert.state().badge`（`{mode, reason}`）与 `dshSoundAlert.attention()` 查看当前数量。
+
+> **注意**：宿主半区的改动（新路由、拉起助手）需要**重启 DSH 客户端**才生效；
+> 浏览器半区（数量口径、推送、原生兜底）会随 HMR 自动热重载。
+> Windows 的叠加徽标画在任务栏按钮的**右下角**（系统约定），不是右上角。
+
 ## 什么时候会响 / 不会响
 
 - **会响**：你正在看的会话（主视图持有的那一行），以及你看着它跑起来、之后切走的那一轮；
